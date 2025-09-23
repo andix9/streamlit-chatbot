@@ -28,12 +28,12 @@ with st.sidebar:
             {"id": "mistralai/mistral-7b-instruct:free", 
             "description": "Powerful open-source model with good general capabilities"
             },
-        "DeepSeek V3 (Free)": 
-            {"id": "deepseek/deepseek-chat-v3-0324:free", 
+        "DeepSeek V3.1 (Free)": 
+            {"id": "deepseek/deepseek-chat-v3.1:free", 
             "description": "Advanced model with strong reasoning abilities"
             },
-        "Llama 3.1 8B (Free)": 
-            {"id": "meta-llama/llama-3.1-8b-instruct:free", 
+        "OpenAI: gpt-oss-20b (free)": 
+            {"id": "openai/gpt-oss-20b:free", 
             "description": "Meta's latest model with broad knowledge"
             },
         "Grok 3 (Free)": 

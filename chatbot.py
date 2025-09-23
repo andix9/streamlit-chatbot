@@ -13,33 +13,32 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Sidebar
+# --- Sidebar ---
 with st.sidebar:
-    # Ganti logo (pakai URL/ path gambar Anda)
     st.image("assets/IMG_4391.JPG", width=100)
     st.title("⚙️ Settings")
 
-    # Mode gelap / terang
+    # Dark mode
     dark_mode = st.toggle("🌙 Dark Mode", value=False)
 
     # Pilihan model
     model_options = {
-        "Mistral 7B (Free)": 
-            {"id": "mistralai/mistral-7b-instruct:free", 
+        "Mistral 7B (Free)": {
+            "id": "mistralai/mistral-7b-instruct:free",
             "description": "Powerful open-source model with good general capabilities"
-            },
-        "DeepSeek V3.1 (Free)": 
-            {"id": "deepseek/deepseek-chat-v3.1:free", 
+        },
+        "DeepSeek V3.1 (Free)": {
+            "id": "deepseek/deepseek-chat-v3.1:free",
             "description": "Advanced model with strong reasoning abilities"
-            },
-        "OpenAI: gpt-oss-20b (free)": 
-            {"id": "openai/gpt-oss-20b:free", 
+        },
+        "OpenAI: gpt-oss-20b (free)": {
+            "id": "openai/gpt-oss-20b:free",
             "description": "Meta's latest model with broad knowledge"
-            },
-        "Grok 3 (Free)": 
-            {"id": "x-ai/grok-4-fast:free", 
+        },
+        "Grok 3 (Free)": {
+            "id": "x-ai/grok-4-fast:free",
             "description": "Grok 3 is a powerful model with strong reasoning abilities"
-            }
+        }
     }
 
     selected_model_name = st.selectbox("🧠 Select Model", list(model_options.keys()), index=0)
@@ -47,11 +46,30 @@ with st.sidebar:
 
     temperature = st.slider("🎛️ Temperature", 0.0, 1.0, 0.7, 0.1)
 
-    if st.button("🧹 Clear Chat History"):
-        st.session_state["chat_histories"][model_options[selected_model_name]["id"]] = []
+    st.markdown("---")
+
+    # --- Chat History Manager ---
+    if "chat_sessions" not in st.session_state:
+        st.session_state["chat_sessions"] = {"Chat 1": []}
+        st.session_state["current_chat"] = "Chat 1"
+
+    chat_names = list(st.session_state["chat_sessions"].keys())
+    current_chat = st.selectbox("📂 Select Chat Session", chat_names, index=chat_names.index(st.session_state["current_chat"]))
+
+    if current_chat != st.session_state["current_chat"]:
+        st.session_state["current_chat"] = current_chat
+
+    if st.button("➕ New Chat"):
+        new_name = f"Chat {len(st.session_state['chat_sessions'])+1}"
+        st.session_state["chat_sessions"][new_name] = []
+        st.session_state["current_chat"] = new_name
         st.rerun()
 
-# CSS Theme (Light & Dark mode)
+    if st.button("🧹 Clear Current Chat"):
+        st.session_state["chat_sessions"][st.session_state["current_chat"]] = []
+        st.rerun()
+
+# --- CSS Theme (Light & Dark) ---
 if dark_mode:
     bg_color = "#1e1e1e"
     text_color = "#f5f5f5"
@@ -94,7 +112,7 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
-# Function untuk bersihkan response
+# --- Utility functions ---
 def clean_response(content):
     if not content:
         return ""
@@ -107,7 +125,6 @@ def clean_response(content):
         content = content.replace(token, "")
     return re.sub(r'\s+', ' ', content).strip()
 
-# Function untuk API call
 def get_ai_response(messages_payload, model, temperature):
     api_key = st.secrets["OPENROUTER_API_KEY"]
     try:
@@ -132,35 +149,29 @@ def get_ai_response(messages_payload, model, temperature):
         st.error(f"Error: {str(e)}")
         return None
 
-# Session state untuk multi-model chat history
-if "chat_histories" not in st.session_state:
-    st.session_state["chat_histories"] = {}
-
-selected_model_id = model_options[selected_model_name]["id"]
-if selected_model_id not in st.session_state["chat_histories"]:
-    st.session_state["chat_histories"][selected_model_id] = []
-
-# Main chat interface
+# --- Main Chat UI ---
 st.title("🤖 Andika's Chatbot")
 st.write("Ask me anything, and I'll try my best to help you!")
 st.markdown("---")
 
+selected_model_id = model_options[selected_model_name]["id"]
 chat_container = st.container()
+
 with chat_container:
-    for message in st.session_state["chat_histories"][selected_model_id]:
+    for message in st.session_state["chat_sessions"][st.session_state["current_chat"]]:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
 prompt = st.chat_input("💬 Type your message here...")
 if prompt:
-    st.session_state["chat_histories"][selected_model_id].append({"role": "user", "content": prompt})
+    st.session_state["chat_sessions"][st.session_state["current_chat"]].append({"role": "user", "content": prompt})
 
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
         with st.spinner("🤔 Thinking..."):
-            messages_for_api = st.session_state["chat_histories"][selected_model_id].copy()
+            messages_for_api = st.session_state["chat_sessions"][st.session_state["current_chat"]].copy()
             ai_response = get_ai_response(messages_for_api, selected_model_id, temperature)
 
             if ai_response:
@@ -172,11 +183,11 @@ if prompt:
                     message_placeholder.markdown(full_response + "▌")
                 message_placeholder.markdown(full_response)
 
-                st.session_state["chat_histories"][selected_model_id].append({"role": "assistant", "content": ai_response})
+                st.session_state["chat_sessions"][st.session_state["current_chat"]].append({"role": "assistant", "content": ai_response})
             else:
                 st.error("⚠️ Failed to get AI response")
 
-# Footer
+# --- Footer ---
 st.markdown("---")
 st.markdown(
     f"""

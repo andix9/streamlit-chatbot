@@ -16,7 +16,7 @@ st.set_page_config(
 # Sidebar
 with st.sidebar:
     # Ganti logo (pakai URL/ path gambar Anda)
-    st.image("https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg", width=100)
+    st.image("assets/IMG_4391.JPG", width=100)
     st.title("⚙️ Settings")
 
     # Mode gelap / terang
